@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12203A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Büdcə və Xərc İzləyicisi</title>
+<style>
+:root{
+  --bg:#EEF2F5;--surface:#FFFFFF;--ink:#16243B;--muted:#5B6B80;--line:#D6DEE6;
+  --in:#13795B;--out:#B83257;--accent:#24508F;--track:#E3E9EF;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1724;--surface:#182234;--ink:#E8EEF6;--muted:#9AABC0;--line:#2A374C;
+  --in:#3FC59A;--out:#F0728F;--accent:#7FA9E8;--track:#243248;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1724;--surface:#182234;--ink:#E8EEF6;--muted:#9AABC0;--line:#2A374C;
+  --in:#3FC59A;--out:#F0728F;--accent:#7FA9E8;--track:#243248;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px}
+h1{font-size:1.25rem;font-weight:700;margin:0;letter-spacing:-.01em}
+h2{font-size:1rem;font-weight:600;margin:0 0 12px}
+input,select,button{font:inherit;color:inherit}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%;min-height:42px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.month{width:auto}
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px}
+.bal-label{color:var(--muted);font-size:.9rem}
+.bal{font-size:clamp(2.4rem,9vw,3.6rem);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin:2px 0 16px}
+.split{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--track)}
+.split i{display:block;height:100%;transition:width .35s}
+.split .a{background:var(--in)}.split .b{background:var(--out)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:12px}
+.legend b{display:block;font-size:1.15rem}
+.legend span{color:var(--muted);font-size:.85rem}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.grid{display:grid;gap:16px;margin-top:16px;grid-template-columns:1fr}
+@media(min-width:820px){.grid{grid-template-columns:340px 1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.seg button{border:0;background:transparent;padding:10px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"].out{background:var(--out);color:#fff}
+.seg button[aria-pressed="true"].in{background:var(--in);color:#fff}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+.primary{width:100%;margin-top:16px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-weight:600;padding:12px;cursor:pointer}
+:root[data-theme="dark"] .primary,:root:not([data-theme="light"]) .primary{color:#0F1724}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .primary{color:#fff}}
+.err{color:var(--out);font-size:.85rem;min-height:1.2em;margin:8px 0 0}
+.cat{margin-bottom:14px}
+.cat-top{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:.92rem}
+.cat-top input{width:92px;min-height:32px;padding:4px 8px;font-size:.85rem;text-align:right}
+.bar{height:8px;border-radius:4px;background:var(--track);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .35s}
+.bar i.over{background:var(--out)}
+.bar i.ok{background:var(--in)}
+.note{font-size:.8rem;color:var(--muted);margin-top:4px}
+.over-t{color:var(--out);font-weight:600}
+.ok-t{color:var(--in);font-weight:600}
+.splash{position:fixed;inset:0;z-index:100;background:#12203A;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;transition:opacity .6s,visibility .6s}
+.splash.hide{opacity:0;visibility:hidden}
+.sp-in{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.coin{width:76px;height:76px;border-radius:50%;background:#F2C14E;color:#12203A;font-weight:700;font-size:2.4rem;display:grid;place-items:center;animation:pop .7s cubic-bezier(.2,1.4,.4,1) both}
+.sp-title{font-weight:700;font-size:1.3rem;animation:fadeup .6s .5s both}
+.sp-stage{display:flex;flex-direction:column;align-items:center;margin-top:6px;animation:fadeup .6s 1s both}
+.bubble{background:#fff;color:#16243B;border-radius:14px;padding:12px 18px;min-width:15rem;min-height:3rem;font-weight:600;position:relative}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-8px;width:16px;height:16px;background:#fff;transform:translateX(-50%) rotate(45deg)}
+.caret{display:inline-block;width:2px;height:1em;background:#24508F;margin-left:2px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+.avatar{width:130px;height:138px;margin-top:10px}
+.wave{transform-origin:122px 140px;animation:wave .7s ease-in-out 1.4s 5}
+.eye{transform-box:fill-box;transform-origin:center;animation:eye 3s infinite}
+.load{width:160px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:6px}
+.load i{display:block;height:100%;background:#F2C14E;animation:fill 4.2s linear both}
+.sp-skip{margin-top:4px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:7px 18px;cursor:pointer}
+@keyframes pop{from{transform:scale(0) rotate(-180deg)}to{transform:scale(1) rotate(0)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes blink{50%{opacity:0}}
+@keyframes fill{from{width:0}to{width:100%}}
+@keyframes wave{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(14deg)}}
+@keyframes eye{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@media(prefers-reduced-motion:reduce){.splash *,.splash *::before,.splash *::after{animation:none!important}}
+ul{list-style:none;margin:0;padding:0}
+li.tx{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+li.tx:first-child{border-top:0}
+.tx small{color:var(--muted);display:block}
+.amt{font-weight:600;white-space:nowrap}
+.amt.in{color:var(--in)}.amt.out{color:var(--out)}
+.del{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1.2rem;padding:6px 10px;border-radius:6px;min-height:36px}
+.del:hover{color:var(--out)}
+.empty{color:var(--muted);padding:14px 0}
+.tools{display:flex;gap:8px}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer;color:var(--muted);font-size:.85rem}
+.right{display:flex;flex-direction:column;gap:16px}
+.chead{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
+.chead h2{margin:0}
+.seg2{display:inline-grid;grid-auto-flow:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg2 button{border:0;background:transparent;padding:7px 14px;cursor:pointer;color:var(--muted);font-weight:500;font-size:.88rem}
+.seg2 button[aria-pressed="true"]{background:var(--accent);color:#fff}
+:root[data-theme="dark"] .seg2 button[aria-pressed="true"]{color:#0F1724}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg2 button[aria-pressed="true"]{color:#0F1724}}
+.ch{display:flex;gap:10px;height:190px;align-items:stretch}
+.grp{flex:1;display:flex;flex-direction:column;min-width:0}
+.bars{flex:1;display:flex;gap:3px;align-items:flex-end;border-bottom:1px solid var(--line)}
+.bars i{flex:1;border-radius:3px 3px 0 0;transition:height .35s}
+.bars .b1{background:var(--in)}.bars .b2{background:var(--out)}
+.grp span{text-align:center;font-size:.78rem;color:var(--muted);margin-top:6px}
+.clegend{display:flex;gap:18px;font-size:.85rem;color:var(--muted);margin-top:10px}
+em{font-style:normal}
+.srow{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
+.srow label{margin-top:0}
+.tools{align-items:center}
+textarea{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%;font:inherit;font-size:.85rem}
+.frow{display:grid;gap:8px;grid-template-columns:1fr 1fr 1fr;margin-bottom:8px}
+@media(max-width:560px){.frow{grid-template-columns:1fr 1fr}.frow input{grid-column:1/-1}}
+.h3{font-size:.88rem;font-weight:600;color:var(--muted);margin:14px 0 8px}
+.donut{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.donut svg{width:150px;height:150px;flex:none}
+#dleg{flex:1;min-width:150px;font-size:.88rem}
+.lg{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+li.tp{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+li.tp:first-child{border-top:0}
+.grow{display:grid;gap:8px;grid-template-columns:1fr 130px auto;margin-top:12px}
+@media(max-width:560px){.grow{grid-template-columns:1fr 1fr}.grow button{grid-column:1/-1}}
+.grow2{display:flex;gap:8px;margin-top:8px}.grow2 input{width:130px}
+.lock{position:fixed;inset:0;z-index:200;background:#12203A;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px}
+.lock[hidden]{display:none}
+.lbox{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;text-align:center}
+.lbox h2{margin:6px 0}
+.lbox .ghost{color:#cfd8e6;border-color:rgba(255,255,255,.4)}
+.lbox .coin{margin:0 auto;animation:none}
+/* Chatbot widget. Colors fall back to defaults when the page has no theme variables. */
+.cb-root{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:90;font-family:inherit}
+.cb-fab{width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--cb-a,#24508F),var(--cb-b,#6B4FD8));box-shadow:0 8px 24px rgba(20,30,60,.35);display:grid;place-items:center;transition:transform .2s}
+.cb-fab:hover{transform:scale(1.07)}
+.cb-fab svg{width:26px;height:26px}
+.cb-fab .ic-x{display:none}
+.cb-root.open .cb-fab .ic-chat{display:none}
+.cb-root.open .cb-fab .ic-x{display:block}
+.cb-panel{position:absolute;right:0;bottom:70px;width:min(380px,calc(100vw - 32px));height:min(540px,calc(100dvh - 120px - env(safe-area-inset-bottom,0px)));display:flex;flex-direction:column;background:var(--surface,#fff);color:var(--ink,#16243B);border:1px solid var(--line,#D6DEE6);border-radius:18px;box-shadow:0 18px 50px rgba(10,20,50,.3);overflow:hidden;visibility:hidden;opacity:0;transform:translateY(14px) scale(.96);transform-origin:bottom right;transition:opacity .22s,transform .22s,visibility .22s}
+.cb-root.open .cb-panel{visibility:visible;opacity:1;transform:none}
+.cb-head{display:flex;align-items:center;gap:10px;padding:14px 16px;color:#fff;background:linear-gradient(135deg,var(--cb-a,#24508F),var(--cb-b,#6B4FD8))}
+.cb-ava{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.cb-head b{display:block;line-height:1.2}
+.cb-head small{opacity:.9;font-size:.76rem}
+.cb-head small::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#5CE0A5;margin-right:5px}
+.cb-x{margin-left:auto;background:transparent;border:0;color:#fff;font-size:1.5rem;line-height:1;cursor:pointer;padding:4px 8px;border-radius:8px}
+.cb-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg,#EEF2F5)}
+.cb-m{max-width:86%;padding:9px 13px;border-radius:16px;font-size:.93rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;animation:cbIn .25s ease both}
+.cb-bot{align-self:flex-start;background:var(--surface,#fff);border:1px solid var(--line,#D6DEE6);border-bottom-left-radius:5px}
+.cb-user{align-self:flex-end;color:#fff;background:var(--cb-a,#24508F);border-bottom-right-radius:5px}
+.cb-m.typing{display:flex;gap:4px;padding:13px 14px}
+.cb-m.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted,#5B6B80);animation:cbDot 1s infinite ease-in-out}
+.cb-m.typing i:nth-child(2){animation-delay:.15s}
+.cb-m.typing i:nth-child(3){animation-delay:.3s}
+.cb-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;background:var(--bg,#EEF2F5)}
+.cb-chips[hidden]{display:none}
+.cb-chips button{border:1px solid var(--line,#D6DEE6);background:var(--surface,#fff);color:inherit;border-radius:999px;padding:6px 12px;font-size:.8rem;cursor:pointer}
+.cb-chips button:hover{border-color:var(--cb-a,#24508F)}
+.cb-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line,#D6DEE6);background:var(--surface,#fff)}
+.cb-form input{flex:1;min-width:0;border-radius:999px;padding:10px 14px}
+.cb-send{width:42px;height:42px;flex:none;border-radius:50%;border:0;cursor:pointer;color:#fff;background:var(--cb-a,#24508F);display:grid;place-items:center}
+.cb-send:disabled{opacity:.5;cursor:default}
+.cb-send svg{width:18px;height:18px}
+.cb-note{margin:0;padding:0 14px 10px;font-size:.7rem;color:var(--muted,#5B6B80);background:var(--surface,#fff)}
+@keyframes cbIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes cbDot{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-5px);opacity:1}}
+@media(prefers-reduced-motion:reduce){.cb-panel,.cb-fab{transition:none}.cb-m,.cb-m.typing i{animation:none}}
+body{padding-bottom:84px}
+</style>
+</head>
+<body>
+<div class="splash" id="splash" role="dialog" aria-label="Xoş gəldiniz">
+  <div class="sp-in">
+    <div class="coin" aria-hidden="true">₼</div>
+    <div class="sp-title" id="spt">Büdcə və Xərc İzləyicisi</div>
+    <div class="sp-stage">
+      <div class="bubble"><span id="typed"></span><i class="caret"></i></div>
+      <svg class="avatar" viewBox="0 0 170 180" aria-hidden="true">
+        <g class="wave"><line x1="122" y1="140" x2="144" y2="94" stroke="#E8B58D" stroke-width="13" stroke-linecap="round"/><circle cx="145" cy="88" r="10" fill="#E8B58D"/></g>
+        <path d="M18 180C18 142 48 128 85 128C122 128 152 142 152 180Z" fill="#24508F"/>
+        <path d="M70 128L85 146L100 128Z" fill="#fff"/>
+        <rect x="74" y="106" width="22" height="26" rx="8" fill="#D9A27A"/>
+        <ellipse cx="85" cy="78" rx="35" ry="39" fill="#E8B58D"/>
+        <path d="M48 78C44 42 70 30 86 31C110 31 124 52 121 78C113 63 100 55 85 55C68 55 55 63 48 78Z" fill="#2B2118"/>
+        <ellipse class="eye" cx="71" cy="82" rx="3.5" ry="4.5" fill="#2B2118"/>
+        <ellipse class="eye" cx="99" cy="82" rx="3.5" ry="4.5" fill="#2B2118"/>
+        <path d="M64 71Q71 67 78 71M92 71Q99 67 106 71" stroke="#2B2118" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M72 99Q85 111 98 99" stroke="#9C4A3C" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="62" cy="94" r="5" fill="#F08A7E" opacity=".35"/><circle cx="108" cy="94" r="5" fill="#F08A7E" opacity=".35"/>
+      </svg>
+    </div>
+    <div class="load"><i></i></div>
+    <button class="sp-skip" id="skip" type="button">Keç</button>
+  </div>
+</div>
+<div class="lock" id="lock" hidden>
+  <div class="lbox">
+    <div class="coin" aria-hidden="true">₼</div>
+    <h2 data-t="unlockTitle"></h2>
+    <input type="password" id="pwU" autocomplete="current-password" data-al="unlockTitle">
+    <p class="err" id="uErr" role="alert" style="color:#ff9bb0"></p>
+    <button class="primary" id="uBtn" type="button" data-t="unlock"></button>
+    <button class="ghost" id="uForgot" type="button" data-t="forgot"></button>
+  </div>
+</div>
+<div class="wrap">
+  <header>
+    <h1 data-t="title"></h1>
+    <div class="tools">
+      <input class="month" type="month" id="month" data-al="month">
+      <button class="ghost" id="sBtn" type="button"></button>
+    </div>
+  </header>
+
+  <section class="card" id="settings" hidden style="margin-bottom:16px">
+    <div class="chead"><h2 data-t="settings"></h2><button class="ghost" id="sClose" type="button" data-t="close"></button></div>
+    <div class="srow">
+      <div><label for="sLang" data-t="lang"></label><select id="sLang"></select></div>
+      <div><label for="sCur" data-t="currency"></label><select id="sCur"></select></div>
+      <div><label for="sTheme" data-t="theme"></label><select id="sTheme"></select></div>
+    </div>
+    <h2 data-t="lockTitle" style="margin-top:6px"></h2>
+    <div id="lockSet"><input type="password" id="pw1" autocomplete="new-password" data-ph="pwNew" style="margin-bottom:8px"><button class="ghost" id="lockOn" type="button" data-t="lockOn"></button></div>
+    <div id="lockUnset" hidden><input type="password" id="pw2" autocomplete="current-password" data-ph="pwCur" style="margin-bottom:8px"><div class="tools" style="flex-wrap:wrap"><button class="ghost" id="lockOff" type="button" data-t="lockOff"></button><button class="ghost" id="lockNow" type="button" data-t="lockNow"></button></div></div>
+    <p class="err" id="lockErr" role="alert"></p>
+    <p class="note" data-t="lockHint"></p>
+    <h2 data-t="dataTitle" style="margin-top:18px"></h2>
+    <div class="tools" style="flex-wrap:wrap;margin-bottom:8px"><button class="ghost" id="exJ" type="button" data-t="exJson"></button><button class="ghost" id="exC" type="button" data-t="exCsv"></button><button class="ghost" id="imp" type="button" data-t="imp"></button></div>
+    <textarea id="dbox" rows="5" data-ph="dboxPh" data-al="dataTitle"></textarea>
+    <p class="note" id="dmsg" role="status"></p>
+    <div style="margin-top:14px"><button class="ghost" id="clear" type="button" data-t="reset"></button></div>
+  </section>
+
+  <section class="hero" aria-live="polite">
+    <div class="bal-label" data-t="balLbl"></div>
+    <div class="bal" id="bal"></div>
+    <div class="split" role="img" data-al="balLbl"><i class="a" id="sa"></i><i class="b" id="sb"></i></div>
+    <div class="legend">
+      <div><span><i class="dot" style="background:var(--in)"></i><em data-t="income"></em></span><b id="inc"></b></div>
+      <div><span><i class="dot" style="background:var(--out)"></i><em data-t="expense"></em></span><b id="exp"></b></div>
+      <div><span data-t="saveRate"></span><b id="rate"></b></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2 data-t="newTx"></h2>
+      <div class="seg">
+        <button type="button" class="out" id="tOut" aria-pressed="true" data-t="expense"></button>
+        <button type="button" class="in" id="tIn" aria-pressed="false" data-t="income"></button>
+      </div>
+      <label for="amt" id="lAmt"></label>
+      <input id="amt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+      <label for="cat" data-t="category"></label>
+      <select id="cat"></select>
+      <label for="date" data-t="date"></label>
+      <input id="date" type="date">
+      <label for="note" data-t="note"></label>
+      <input id="note" type="text" maxlength="60" data-ph="notePh">
+      <p class="err" id="err" role="alert"></p>
+      <button class="primary" id="add" type="button" data-t="addBtn"></button>
+      <button class="ghost" id="cancelEd" type="button" data-t="cancel" hidden style="width:100%;margin-top:8px"></button>
+    </section>
+
+    <div class="right">
+      <section class="card">
+        <div class="chead">
+          <h2 data-t="chartTitle"></h2>
+          <div class="seg2">
+            <button type="button" id="cW" aria-pressed="true" data-t="week"></button>
+            <button type="button" id="cM" aria-pressed="false" data-t="monthly"></button>
+            <button type="button" id="cY" aria-pressed="false" data-t="yearly"></button>
+          </div>
+        </div>
+        <div class="ch" id="chart" role="img" data-al="chartTitle"></div>
+        <div class="clegend"><span><i class="dot" style="background:var(--in)"></i><em data-t="income"></em></span><span><i class="dot" style="background:var(--out)"></i><em data-t="expense"></em></span></div>
+        <p class="note" id="cnote"></p>
+      </section>
+      <section class="card">
+        <h2 data-t="anaTitle"></h2>
+        <h3 class="h3" data-t="anaShare"></h3>
+        <div class="donut"><svg id="donut" viewBox="0 0 42 42" role="img" data-al="anaShare"></svg><div id="dleg"></div></div>
+        <h3 class="h3" data-t="anaTop"></h3>
+        <ul id="top"></ul>
+      </section>
+      <section class="card">
+        <h2 data-t="goalsTitle"></h2>
+        <div id="goals"></div>
+        <div class="grow"><input id="gName" type="text" maxlength="40" data-ph="goalName" data-al="goalName"><input id="gTarget" type="number" min="0" step="1" inputmode="decimal" data-ph="goalTarget" data-al="goalTarget"><button class="ghost" id="gAdd" type="button" data-t="goalAdd"></button></div>
+      </section>
+      <section class="card">
+        <h2 data-t="catsTitle"></h2>
+        <div id="cats"></div>
+        <p class="note" data-t="limitHint"></p>
+      </section>
+      <section class="card">
+        <h2 data-t="listTitle"></h2>
+        <div class="frow"><input type="search" id="fq" data-ph="searchPh" data-al="searchPh"><select id="fT" data-al="typeL"></select><select id="fC" data-al="category"></select></div>
+        <ul id="list"></ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Chatbot widget: paste at the end of the page body, before chatbot.js -->
+<div class="cb-root" id="cbRoot">
+  <section class="cb-panel" id="cbPanel" role="dialog" aria-modal="false" data-cb-al="title">
+    <header class="cb-head">
+      <div class="cb-ava" aria-hidden="true">AI</div>
+      <div><b data-cb="title"></b><small data-cb="status"></small></div>
+      <button class="cb-x" id="cbClose" type="button" data-cb-al="close">×</button>
+    </header>
+    <div class="cb-msgs" id="cbMsgs" role="log" aria-live="polite"><div class="cb-m cb-bot" data-cb="hi"></div></div>
+    <div class="cb-chips" id="cbChips">
+      <button type="button" data-cb="c1" data-q="c1"></button>
+      <button type="button" data-cb="c2" data-q="c2"></button>
+      <button type="button" data-cb="c3" data-q="c3"></button>
+    </div>
+    <form class="cb-form" id="cbForm" autocomplete="off">
+      <input id="cbInput" type="text" maxlength="500" data-cb-ph="ph" data-cb-al="ph">
+      <button class="cb-send" id="cbSend" type="submit" data-cb-al="send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 21 3l-8.5 18-2.2-7.3L3 11.5Z" fill="currentColor"/></svg></button>
+    </form>
+    <p class="cb-note" data-cb="note"></p>
+  </section>
+  <button class="cb-fab" id="cbToggle" type="button" aria-expanded="false" aria-controls="cbPanel">
+    <svg class="ic-chat" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 21 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+<script>
+(function(){
+  var C=["tr","az","en","ru","es","de"];
+  var LOC={tr:"tr-TR",az:"az-AZ",en:"en-US",ru:"ru-RU",es:"es-ES",de:"de-DE"};
+  var NAMES={tr:"Türkçe",az:"Azərbaycanca",en:"English",ru:"Русский",es:"Español",de:"Deutsch"};
+  var CUR={AZN:"₼",TRY:"₺",USD:"$",EUR:"€",RUB:"₽"};
+  var D={
+    title:"Bütçe ve Gider Takibi|Büdcə və Xərc İzləyicisi|Budget & Expense Tracker|Бюджет и расходы|Presupuesto y gastos|Budget- und Ausgabentracker",
+    settings:"Ayarlar|Ayarlar|Settings|Настройки|Ajustes|Einstellungen",
+    close:"Kapat|Bağla|Close|Закрыть|Cerrar|Schließen",
+    month:"Ay|Ay|Month|Месяц|Mes|Monat",
+    balLbl:"Ayın bakiyesi|Ayın qalığı|Balance for the month|Баланс за месяц|Saldo del mes|Saldo im Monat",
+    income:"Gelir|Gəlir|Income|Доходы|Ingresos|Einnahmen",
+    expense:"Gider|Xərc|Expense|Расходы|Gastos|Ausgaben",
+    saveRate:"Tasarruf oranı|Qənaət payı|Savings rate|Норма сбережений|Tasa de ahorro|Sparquote",
+    newTx:"Yeni işlem ekle|Yeni əməliyyat əlavə et|Add a transaction|Добавить операцию|Añadir movimiento|Buchung hinzufügen",
+    amount:"Tutar|Məbləğ|Amount|Сумма|Importe|Betrag",
+    category:"Kategori|Kateqoriya|Category|Категория|Categoría|Kategorie",
+    date:"Tarih|Tarix|Date|Дата|Fecha|Datum",
+    note:"Not (isteğe bağlı)|Qeyd (istəyə bağlı)|Note (optional)|Заметка (необязательно)|Nota (opcional)|Notiz (optional)",
+    notePh:"Örn: market alışverişi|Məsələn: market alışı|e.g. groceries|Например: продукты|Ej.: supermercado|z. B. Einkauf",
+    errAmt:"Tutarı 0'dan büyük bir sayı olarak yazın.|Məbləği 0-dan böyük rəqəmlə yazın.|Enter an amount greater than 0.|Введите сумму больше 0.|Introduce un importe mayor que 0.|Gib einen Betrag über 0 ein.",
+    errDate:"Tarihi seçin.|Tarixi seçin.|Choose a date.|Выберите дату.|Elige una fecha.|Wähle ein Datum.",
+    addBtn:"İşlemi ekle|Əməliyyatı əlavə et|Add transaction|Добавить|Añadir|Hinzufügen",
+    chartTitle:"Gelir ve gider grafiği|Gəlir və xərc qrafiki|Income and expense chart|График доходов и расходов|Gráfico de ingresos y gastos|Einnahmen und Ausgaben",
+    week:"Haftalık|Həftəlik|Weekly|По неделям|Semanal|Wöchentlich",
+    monthly:"Aylık|Aylıq|Monthly|По месяцам|Mensual|Monatlich",
+    chW:"Seçilen ayın haftaları. |Seçilmiş ayın həftələri. |Weeks of the selected month. |Недели выбранного месяца. |Semanas del mes elegido. |Wochen des gewählten Monats. ",
+    chM:"Seçilen ay dahil son 6 ay. |Seçilmiş ay daxil son 6 ay. |Last 6 months up to the selected one. |Последние 6 месяцев по выбранный. |Últimos 6 meses hasta el elegido. |Letzte 6 Monate bis zum gewählten. ",
+    maxBar:"En yüksek sütun: |Ən hündür sütun: |Highest bar: |Максимум: |Barra más alta: |Höchster Balken: ",
+    noData:"Henüz veri yok.|Hələ məlumat yoxdur.|No data yet.|Данных пока нет.|Aún no hay datos.|Noch keine Daten.",
+    catsTitle:"Kategoriye göre gider ve limit|Kateqoriyalar üzrə xərc və limit|Spending and limit by category|Расходы и лимиты по категориям|Gastos y límite por categoría|Ausgaben und Limit je Kategorie",
+    limitPh:"Limit|Limit|Limit|Лимит|Límite|Limit",
+    limitHint:"Limit içindeyken çubuk yeşil, limite ulaşınca veya aşınca kırmızı olur.|Limit daxilində zolaq yaşıl olur, limitə çatanda və ya aşanda qırmızıya dönür.|The bar is green within the limit and turns red when you reach or exceed it.|Полоса зелёная, пока лимит не достигнут, и краснеет, когда он достигнут или превышен.|La barra es verde dentro del límite y se pone roja al alcanzarlo o superarlo.|Der Balken ist innerhalb des Limits grün und wird rot, wenn es erreicht oder überschritten ist.",
+    within:"limit içinde|limit daxilində|within limit|в пределах лимита|dentro del límite|im Limit",
+    over:"limit aşıldı|limit aşıldı|limit exceeded|лимит превышен|límite superado|Limit überschritten",
+    listTitle:"Bu ayın işlemleri|Bu ayın əməliyyatları|This month's transactions|Операции за этот месяц|Movimientos de este mes|Buchungen dieses Monats",
+    empty:"Bu ay için işlem yok. Formdan ilk gelir veya gideri ekleyin.|Bu ay üçün əməliyyat yoxdur. Formadan ilk gəlir və ya xərci əlavə edin.|No transactions this month. Add your first income or expense with the form.|В этом месяце операций нет. Добавьте первый доход или расход в форме.|No hay movimientos este mes. Añade tu primer ingreso o gasto con el formulario.|Diesen Monat gibt es keine Buchungen. Füge mit dem Formular die erste Einnahme oder Ausgabe hinzu.",
+    del:"Sil|Sil|Delete|Удалить|Eliminar|Löschen",
+    greet:"Merhaba, hoş geldiniz!|Salam, xoş gəldiniz!|Hello, welcome!|Здравствуйте, добро пожаловать!|¡Hola, bienvenido!|Hallo, willkommen!",
+    skip:"Geç|Keç|Skip|Пропустить|Omitir|Überspringen",
+    lang:"Dil|Dil|Language|Язык|Idioma|Sprache",
+    currency:"Para birimi|Valyuta|Currency|Валюта|Moneda|Währung",
+    theme:"Tema|Mövzu|Theme|Тема|Tema|Design",
+    tAuto:"Otomatik|Avtomatik|Auto|Авто|Automático|Automatisch",
+    tLight:"Açık|İşıqlı|Light|Светлая|Claro|Hell",
+    tDark:"Koyu|Tünd|Dark|Тёмная|Oscuro|Dunkel",
+    reset:"Tüm verileri sil|Bütün məlumatı sil|Delete all data|Удалить все данные|Borrar todos los datos|Alle Daten löschen",
+    sure:"Emin misiniz? Tekrar basın|Əminsiniz? Yenidən basın|Sure? Press again|Уверены? Нажмите ещё раз|¿Seguro? Pulsa otra vez|Sicher? Nochmal drücken"
+  };
+  Object.assign(D,{
+    typeL:"Tür|Tip|Type|Тип|Tipo|Typ",
+    all:"Tümü|Hamısı|All|Все|Todos|Alle",
+    searchPh:"Not veya kategori ara|Qeyd və ya kateqoriya axtar|Search note or category|Поиск по заметке или категории|Buscar nota o categoría|Notiz oder Kategorie suchen",
+    edit:"Düzenle|Redaktə et|Edit|Изменить|Editar|Bearbeiten",
+    saveCh:"Değişiklikleri kaydet|Dəyişiklikləri yadda saxla|Save changes|Сохранить изменения|Guardar cambios|Änderungen speichern",
+    cancel:"Vazgeç|Ləğv et|Cancel|Отмена|Cancelar|Abbrechen",
+    goalsTitle:"Tasarruf hedefleri|Yığım hədəfləri|Savings goals|Цели накоплений|Metas de ahorro|Sparziele",
+    goalName:"Hedef adı|Hədəfin adı|Goal name|Название цели|Nombre de la meta|Name des Ziels",
+    goalTarget:"Hedef tutar|Hədəf məbləği|Target amount|Целевая сумма|Importe objetivo|Zielbetrag",
+    goalAdd:"Hedef ekle|Hədəf əlavə et|Add goal|Добавить цель|Añadir meta|Ziel hinzufügen",
+    goalPut:"Ekle|Əlavə et|Add|Добавить|Añadir|Einzahlen",
+    goalDone:"ulaşıldı|çatıldı|reached|достигнута|alcanzada|erreicht",
+    goalEmpty:"Henüz hedef yok. Örneğin telefon veya tatil için bir hedef ekleyin.|Hələ hədəf yoxdur. Məsələn telefon və ya tətil üçün hədəf əlavə edin.|No goals yet. Add one, for example a phone or a holiday.|Целей пока нет. Добавьте, например, телефон или отпуск.|Aún no hay metas. Añade una, por ejemplo un móvil o unas vacaciones.|Noch keine Ziele. Füge eines hinzu, zum Beispiel ein Handy oder einen Urlaub.",
+    anaTitle:"Analiz|Təhlil|Analysis|Анализ|Análisis|Analyse",
+    anaShare:"Kategorilere göre gider payı|Kateqoriyalar üzrə xərc payı|Expense share by category|Доля расходов по категориям|Parte del gasto por categoría|Ausgabenanteil je Kategorie",
+    anaTop:"En çok harcanan yerler|Ən çox xərclənən yerlər|Top spending|Больше всего потрачено|Mayores gastos|Größte Ausgaben",
+    anaNone:"Bu ay gider yok.|Bu ay xərc yoxdur.|No expenses this month.|В этом месяце расходов нет.|Sin gastos este mes.|Keine Ausgaben in diesem Monat.",
+    yearly:"Yıllık|İllik|Yearly|За год|Anual|Jährlich",
+    chY:"Seçilen yılın ayları. |Seçilmiş ilin ayları. |Months of the selected year. |Месяцы выбранного года. |Meses del año elegido. |Monate des gewählten Jahres. ",
+    dataTitle:"Veri yedeği|Məlumat ehtiyatı|Data backup|Резервная копия|Copia de seguridad|Datensicherung",
+    exJson:"Dışa aktar (JSON)|İxrac (JSON)|Export (JSON)|Экспорт (JSON)|Exportar (JSON)|Export (JSON)",
+    exCsv:"Dışa aktar (CSV)|İxrac (CSV)|Export (CSV)|Экспорт (CSV)|Exportar (CSV)|Export (CSV)",
+    imp:"İçe aktar|İdxal|Import|Импорт|Importar|Import",
+    dboxPh:"İçe aktarmak için veriyi buraya yapıştırın veya dışa aktarıp kopyalayın.|İdxal üçün məlumatı bura yapışdırın, ya da ixrac edib kopyalayın.|Paste data here to import, or export and copy it.|Вставьте данные для импорта или экспортируйте и скопируйте их.|Pega aquí los datos para importar, o exporta y cópialos.|Füge Daten zum Import hier ein oder exportiere und kopiere sie.",
+    exDone:"Veri aşağıda. Kopyalayıp güvenli bir yere kaydedin.|Məlumat aşağıdadır. Kopyalayıb təhlükəsiz yerdə saxlayın.|Data is below. Copy it and keep it somewhere safe.|Данные ниже. Скопируйте и сохраните в надёжном месте.|Los datos están abajo. Cópialos y guárdalos en un lugar seguro.|Die Daten stehen unten. Kopiere sie und bewahre sie sicher auf.",
+    impOk:"İçe aktarılan kayıt: |İdxal olunan qeyd: |Records imported: |Импортировано записей: |Registros importados: |Importierte Einträge: ",
+    impErr:"Bu veri okunamadı.|Bu məlumat oxuna bilmədi.|Could not read this data.|Не удалось прочитать данные.|No se pudieron leer los datos.|Die Daten konnten nicht gelesen werden.",
+    lockTitle:"Parola koruması|Parol qoruması|Password protection|Защита паролем|Protección con contraseña|Passwortschutz",
+    pwNew:"Yeni parola|Yeni parol|New password|Новый пароль|Nueva contraseña|Neues Passwort",
+    pwCur:"Mevcut parola|Cari parol|Current password|Текущий пароль|Contraseña actual|Aktuelles Passwort",
+    lockOn:"Parolayı aç|Parolu aktiv et|Turn on password|Включить пароль|Activar contraseña|Passwort aktivieren",
+    lockOff:"Parolayı kapat|Parolu söndür|Turn off password|Выключить пароль|Desactivar contraseña|Passwort deaktivieren",
+    lockNow:"Şimdi kilitle|İndi kilidlə|Lock now|Заблокировать|Bloquear ahora|Jetzt sperren",
+    lockHint:"Sayfa açılırken ekranı gizler, tarayıcıdaki verileri şifrelemez. Unutulan parola kurtarılamaz, verileri silmeniz gerekir.|Səhifə açılanda ekranı gizlədir, brauzerdəki məlumatları şifrələmir. Unudulan parol bərpa olunmur, məlumatı silmək lazım olur.|Hides the screen when the page opens; it does not encrypt data stored in this browser. A forgotten password cannot be recovered; you would have to delete the data.|Скрывает экран при открытии страницы, но не шифрует данные в браузере. Забытый пароль восстановить нельзя, придётся удалить данные.|Oculta la pantalla al abrir la página, pero no cifra los datos del navegador. Una contraseña olvidada no se recupera; tendrías que borrar los datos.|Blendet den Bildschirm beim Öffnen aus, verschlüsselt aber keine Daten im Browser. Ein vergessenes Passwort lässt sich nicht wiederherstellen; du müsstest die Daten löschen.",
+    unlockTitle:"Parolayı girin|Parolu daxil edin|Enter password|Введите пароль|Introduce la contraseña|Passwort eingeben",
+    unlock:"Kilidi aç|Kilidi aç|Unlock|Разблокировать|Desbloquear|Entsperren",
+    pwWrong:"Parola yanlış.|Parol səhvdir.|Wrong password.|Неверный пароль.|Contraseña incorrecta.|Falsches Passwort.",
+    pwShort:"En az 4 karakter girin.|Ən azı 4 simvol yazın.|Use at least 4 characters.|Минимум 4 символа.|Usa al menos 4 caracteres.|Mindestens 4 Zeichen.",
+    forgot:"Parolayı unuttum, tüm verileri sil|Parolu unutdum, bütün məlumatı sil|Forgot password: delete all data|Забыл пароль: удалить все данные|Olvidé la contraseña: borrar todo|Passwort vergessen: alles löschen"
+  });
+  var CD={
+    "Qida":"Yiyecek|Qida|Food|Еда|Comida|Essen",
+    "Nəqliyyat":"Ulaşım|Nəqliyyat|Transport|Транспорт|Transporte|Verkehr",
+    "Mənzil":"Konut|Mənzil|Housing|Жильё|Vivienda|Wohnen",
+    "Kommunal":"Faturalar|Kommunal|Utilities|Коммуналка|Suministros|Nebenkosten",
+    "Sağlamlıq":"Sağlık|Sağlamlıq|Health|Здоровье|Salud|Gesundheit",
+    "Əyləncə":"Eğlence|Əyləncə|Leisure|Развлечения|Ocio|Freizeit",
+    "Alış-veriş":"Alışveriş|Alış-veriş|Shopping|Покупки|Compras|Einkäufe",
+    "Digər":"Diğer|Digər|Other|Другое|Otros|Sonstiges",
+    "Maaş":"Maaş|Maaş|Salary|Зарплата|Salario|Gehalt",
+    "Təqaüd":"Emekli maaşı|Təqaüd|Pension|Пенсия|Pensión|Rente",
+    "Əlavə gəlir":"Ek gelir|Əlavə gəlir|Side income|Подработка|Ingreso extra|Nebeneinkommen",
+    "Hədiyyə":"Hediye|Hədiyyə|Gift|Подарок|Regalo|Geschenk"
+  };
+  var EXP=["Qida","Nəqliyyat","Mənzil","Kommunal","Sağlamlıq","Əyləncə","Alış-veriş","Digər"];
+  var INC=["Maaş","Təqaüd","Əlavə gəlir","Hədiyyə","Digər"];
+  var KEY="budce-izleyici-v1",SK="budce-settings-v1";
+  var state={tx:[],limits:{},goals:[]},S={lang:"az",cur:"AZN",theme:"auto"},type="out",cmode="week",editId=null,lock=null,splashed=false,LK="budce-lock-v1";
+  var $=function(id){return document.getElementById(id)};
+  var qa=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+
+  try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);if(p&&Array.isArray(p.tx)){state.tx=p.tx;state.limits=p.limits||{};state.goals=Array.isArray(p.goals)?p.goals:[]}}}catch(e){}
+  try{var s0=JSON.parse(localStorage.getItem(SK));if(s0){if(C.indexOf(s0.lang)>-1)S.lang=s0.lang;if(CUR[s0.cur])S.cur=s0.cur;if(["auto","light","dark"].indexOf(s0.theme)>-1)S.theme=s0.theme}}catch(e){}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+  function saveS(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}}
+
+  function li(){return C.indexOf(S.lang)}
+  function t(k){return D[k].split("|")[li()]}
+  function cn(c){return CD[c]?CD[c].split("|")[li()]:c}
+  function fmt(n){return n.toLocaleString(LOC[S.lang],{minimumFractionDigits:2,maximumFractionDigits:2})+" "+CUR[S.cur]}
+  function today(){return new Date().toISOString().slice(0,10)}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+  $("month").value=today().slice(0,7);
+  $("date").value=today();
+
+  function opts(el,list,val){el.innerHTML=list.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join("");el.value=val}
+  function fillCats(){
+    var arr=type==="out"?EXP:INC;
+    opts($("cat"),arr.map(function(c){return[c,cn(c)]}),arr[0]);
+  }
+  function applyTheme(){
+    if(S.theme==="auto")document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme",S.theme);
+  }
+  function applyText(){
+    document.documentElement.lang=S.lang;
+    document.title=t("title");
+    qa("[data-t]").forEach(function(el){el.textContent=t(el.dataset.t)});
+    qa("[data-ph]").forEach(function(el){el.placeholder=t(el.dataset.ph)});
+    qa("[data-al]").forEach(function(el){el.setAttribute("aria-label",t(el.dataset.al))});
+    if($("spt"))$("spt").textContent=t("title");
+    if($("skip"))$("skip").textContent=t("skip");
+    $("sBtn").textContent="⚙ "+t("settings");
+    $("lAmt").textContent=t("amount")+" ("+CUR[S.cur]+")";
+    opts($("sTheme"),[["auto",t("tAuto")],["light",t("tLight")],["dark",t("tDark")]],S.theme);
+    var b=$("clear");b.dataset.sure="0";b.textContent=t("reset");
+    fillCats();fillFilters();syncAdd();
+  }
+  function initSettings(){
+    opts($("sLang"),C.map(function(c){return[c,NAMES[c]]}),S.lang);
+    opts($("sCur"),Object.keys(CUR).map(function(c){return[c,CUR[c]+" "+c]}),S.cur);
+    $("sLang").onchange=function(){S.lang=this.value;saveS();applyText();render()};
+    $("sCur").onchange=function(){S.cur=this.value;saveS();applyText();render()};
+    $("sTheme").onchange=function(){S.theme=this.value;saveS();applyTheme()};
+    $("sBtn").onclick=function(){var s=$("settings");s.hidden=!s.hidden;if(!s.hidden)s.scrollIntoView({behavior:"smooth",block:"nearest"})};
+    $("sClose").onclick=function(){$("settings").hidden=true};
+  }
+
+  function setType(x){
+    type=x;
+    $("tOut").setAttribute("aria-pressed",x==="out");
+    $("tIn").setAttribute("aria-pressed",x==="in");
+    fillCats();
+  }
+  $("tOut").onclick=function(){setType("out")};
+  $("tIn").onclick=function(){setType("in")};
+
+  $("add").onclick=function(){
+    var a=parseFloat($("amt").value),d=$("date").value;
+    if(!(a>0)){$("err").textContent=t("errAmt");return}
+    if(!d){$("err").textContent=t("errDate");return}
+    $("err").textContent="";
+    var rec={type:type,amt:Math.round(a*100)/100,cat:$("cat").value,date:d,note:$("note").value.trim()};
+    if(editId){state.tx.forEach(function(x){if(x.id===editId)Object.assign(x,rec)})}else{rec.id=Date.now()+Math.random();state.tx.push(rec)}
+    editId=null;syncAdd();
+    save();
+    $("amt").value="";$("note").value="";
+    $("month").value=d.slice(0,7);
+    render();
+  };
+  function rst(){var b=$("clear");b.dataset.sure="0";b.textContent=t("reset")}
+  $("clear").onclick=function(){
+    if(!state.tx.length&&!state.goals.length&&!Object.keys(state.limits).length)return;
+    if(this.dataset.sure==="1"){state={tx:[],limits:{},goals:[]};save();render();rst();return}
+    this.dataset.sure="1";this.textContent=t("sure");
+    setTimeout(rst,3500);
+  };
+  $("month").onchange=render;
+  function setMode(x){cmode=x;$("cW").setAttribute("aria-pressed",x==="week");$("cM").setAttribute("aria-pressed",x==="month");$("cY").setAttribute("aria-pressed",x==="year");render()}
+  $("cW").onclick=function(){setMode("week")};
+  $("cM").onclick=function(){setMode("month")};
+  $("cY").onclick=function(){setMode("year")};
+
+  function drawChart(m){
+    var y=+m.slice(0,4),mo=+m.slice(5,7),groups=[];
+    if(cmode==="week"){
+      var last=new Date(y,mo,0).getDate();
+      [[1,7],[8,14],[15,21],[22,28],[29,31]].forEach(function(e){
+        if(e[0]>last)return;
+        var to=Math.min(e[1],last);
+        groups.push({l:e[0]===to?String(to):e[0]+"–"+to,i:0,o:0,k:function(d){var n=+d.slice(8,10);return d.slice(0,7)===m&&n>=e[0]&&n<=to}});
+      });
+    }else if(cmode==="year"){
+      for(var k=0;k<12;k++){
+        var yk=y+"-"+String(k+1).padStart(2,"0");
+        groups.push({l:new Date(y,k,1).toLocaleDateString(LOC[S.lang],{month:"short"}),i:0,o:0,k:(function(kk){return function(d){return d.slice(0,7)===kk}})(yk)});
+      }
+    }else{
+      for(var n=5;n>=0;n--){
+        var dt=new Date(y,mo-1-n,1);
+        var key=dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0");
+        groups.push({l:dt.toLocaleDateString(LOC[S.lang],{month:"short"}),i:0,o:0,k:(function(kk){return function(d){return d.slice(0,7)===kk}})(key)});
+      }
+    }
+    state.tx.forEach(function(x){groups.forEach(function(g){if(g.k(x.date)){if(x.type==="in")g.i+=x.amt;else g.o+=x.amt}})});
+    var max=1;
+    groups.forEach(function(g){max=Math.max(max,g.i,g.o)});
+    $("chart").innerHTML=groups.map(function(g){
+      return '<div class="grp"><div class="bars"><i class="b1" style="height:'+g.i/max*100+'%" title="'+t("income")+': '+fmt(g.i)+'"></i><i class="b2" style="height:'+g.o/max*100+'%" title="'+t("expense")+': '+fmt(g.o)+'"></i></div><span>'+g.l+'</span></div>';
+    }).join("");
+    $("cnote").textContent=t(cmode==="week"?"chW":cmode==="year"?"chY":"chM")+(max>1?t("maxBar")+fmt(max)+".":t("noData"));
+  }
+
+  function render(){
+    var m=$("month").value||today().slice(0,7);
+    var rows=state.tx.filter(function(x){return x.date.slice(0,7)===m}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0});
+    var inc=0,exp=0,by={};
+    rows.forEach(function(x){if(x.type==="in")inc+=x.amt;else{exp+=x.amt;by[x.cat]=(by[x.cat]||0)+x.amt}});
+    var bal=inc-exp;
+    $("bal").textContent=fmt(bal);
+    $("bal").style.color=bal<0?"var(--out)":"var(--ink)";
+    $("inc").textContent=fmt(inc);$("exp").textContent=fmt(exp);
+    $("rate").textContent=inc>0?Math.round(Math.max(bal,0)/inc*100)+"%":"0%";
+    var tot=inc+exp;
+    $("sa").style.width=tot?inc/tot*100+"%":"0";
+    $("sb").style.width=tot?exp/tot*100+"%":"0";
+    drawChart(m);
+
+    $("cats").innerHTML=EXP.map(function(c){
+      var s=by[c]||0,l=state.limits[c]||0,pct=l?Math.min(s/l*100,100):(exp?s/exp*100:0),over=l&&s>=l;
+      return '<div class="cat"><div class="cat-top"><span>'+cn(c)+' — <span class="'+(over?'over-t':(l?'ok-t':''))+'">'+fmt(s)+(l?' ('+t(over?'over':'within')+')':'')+'</span></span>'+
+        '<input type="number" min="0" step="1" inputmode="decimal" placeholder="'+t("limitPh")+'" aria-label="'+cn(c)+' — '+t("limitPh")+'" data-c="'+c+'" value="'+(l||"")+'"></div>'+
+        '<div class="bar"><i class="'+(over?'over':(l?'ok':''))+'" style="width:'+pct+'%"></i></div></div>';
+    }).join("");
+    qa("#cats input").forEach(function(el){
+      el.onchange=function(){var v=parseFloat(el.value);if(v>0)state.limits[el.dataset.c]=v;else delete state.limits[el.dataset.c];save();render()};
+    });
+
+    var q=$("fq").value.trim().toLowerCase(),ft=$("fT").value||"all",fc=$("fC").value||"all";
+    var shown=rows.filter(function(x){return(ft==="all"||x.type===ft)&&(fc==="all"||x.cat===fc)&&(!q||(x.note+" "+cn(x.cat)).toLowerCase().indexOf(q)>-1)});
+    $("list").innerHTML=shown.length?shown.map(function(x){
+      return '<li class="tx"><div>'+esc(cn(x.cat))+(x.note?' — '+esc(x.note):'')+'<small>'+x.date.split("-").reverse().join(".")+'</small></div>'+
+        '<span class="amt '+x.type+'">'+(x.type==="in"?"+":"−")+fmt(x.amt)+'</span>'+
+        '<button class="del" type="button" aria-label="'+t("edit")+'" data-ed="'+x.id+'">✎</button>'+
+        '<button class="del" type="button" aria-label="'+t("del")+'" data-id="'+x.id+'">×</button></li>';
+    }).join(""):'<li class="empty">'+t("empty")+'</li>';
+    qa("#list [data-id]").forEach(function(b){
+      b.onclick=function(){state.tx=state.tx.filter(function(x){return String(x.id)!==b.dataset.id});if(editId&&String(editId)===b.dataset.id){editId=null;syncAdd()}save();render()};
+    });
+    qa("#list [data-ed]").forEach(function(b){
+      b.onclick=function(){
+        var x=state.tx.filter(function(y){return String(y.id)===b.dataset.ed})[0];if(!x)return;
+        editId=x.id;setType(x.type);$("cat").value=x.cat;$("amt").value=x.amt;$("date").value=x.date;$("note").value=x.note||"";
+        syncAdd();$("amt").scrollIntoView({behavior:"smooth",block:"center"});$("amt").focus();
+      };
+    });
+    drawAna(rows,by,exp);
+    drawGoals();
+  }
+
+  function syncAdd(){$("add").textContent=t(editId?"saveCh":"addBtn");$("cancelEd").hidden=!editId}
+  function fillFilters(){
+    var a=$("fT").value||"all",b=$("fC").value||"all";
+    opts($("fT"),[["all",t("typeL")+": "+t("all")],["in",t("income")],["out",t("expense")]],a);
+    opts($("fC"),[["all",t("category")+": "+t("all")]].concat(EXP.concat(INC.filter(function(x){return x!=="Digər"})).map(function(c){return[c,cn(c)]})),b);
+  }
+
+  function drawAna(rows,by,exp){
+    var COL=["#24508F","#13795B","#B83257","#D98E04","#7A4EAB","#0E8FA3","#8C6B3F","#6B7A8F"];
+    var items=EXP.filter(function(c){return by[c]}).sort(function(a,b){return by[b]-by[a]});
+    var h='<circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--track)" stroke-width="6"/>',off=25;
+    items.forEach(function(c){var p=by[c]/exp*100;h+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="'+COL[EXP.indexOf(c)]+'" stroke-width="6" stroke-dasharray="'+p+' '+(100-p)+'" stroke-dashoffset="'+off+'"/>';off-=p});
+    $("donut").innerHTML=h;
+    $("dleg").innerHTML=items.length?items.map(function(c){return '<div class="lg"><span><i class="dot" style="background:'+COL[EXP.indexOf(c)]+'"></i>'+cn(c)+'</span><b>'+Math.round(by[c]/exp*100)+'%</b></div>'}).join(""):'<span class="note">'+t("anaNone")+'</span>';
+    var g={};
+    rows.forEach(function(x){if(x.type!=="out")return;var k=x.note?x.note.toLowerCase():cn(x.cat);g[k]=(g[k]||0)+x.amt});
+    var top=Object.keys(g).sort(function(a,b){return g[b]-g[a]}).slice(0,5);
+    $("top").innerHTML=top.length?top.map(function(k){return '<li class="tp"><span>'+esc(k.charAt(0).toUpperCase()+k.slice(1))+'</span><b>'+fmt(g[k])+'</b></li>'}).join(""):'<li class="empty">'+t("anaNone")+'</li>';
+  }
+
+  function drawGoals(){
+    $("goals").innerHTML=state.goals.length?state.goals.map(function(g){
+      var pct=Math.min(g.saved/g.target*100,100),done=g.saved>=g.target;
+      return '<div class="cat"><div class="cat-top"><span>'+esc(g.name)+' — <span class="ok-t">'+fmt(g.saved)+' / '+fmt(g.target)+'</span>'+(done?' ('+t("goalDone")+')':'')+'</span><button class="del" type="button" aria-label="'+t("del")+'" data-gd="'+g.id+'">×</button></div>'+
+        '<div class="bar"><i class="ok" style="width:'+pct+'%"></i></div>'+
+        '<div class="grow2"><input type="number" min="0" step="1" inputmode="decimal" placeholder="'+t("amount")+'" aria-label="'+t("amount")+'"><button class="ghost" type="button" data-gp="'+g.id+'">'+t("goalPut")+'</button></div></div>';
+    }).join(""):'<p class="note">'+t("goalEmpty")+'</p>';
+    qa("#goals [data-gd]").forEach(function(b){b.onclick=function(){state.goals=state.goals.filter(function(g){return String(g.id)!==b.dataset.gd});save();render()}});
+    qa("#goals [data-gp]").forEach(function(b){b.onclick=function(){
+      var v=parseFloat(b.previousSibling.value);if(!(v>0))return;
+      state.goals.forEach(function(g){if(String(g.id)===b.dataset.gp)g.saved=Math.round((g.saved+v)*100)/100});
+      save();render();
+    }});
+  }
+
+  function csvq(v){return '"'+String(v).replace(/"/g,'""')+'"'}
+  function csvSplit(l){var r=[],c="",q=false;for(var i=0;i<l.length;i++){var ch=l.charAt(i);if(q){if(ch==='"'){if(l.charAt(i+1)==='"'){c+='"';i++}else q=false}else c+=ch}else if(ch==='"')q=true;else if(ch===","){r.push(c);c=""}else c+=ch}r.push(c);return r}
+  function showData(txt,ext){
+    var b=$("dbox");b.value=txt;b.focus();b.select();
+    try{if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(function(){})}catch(e){}
+    $("dmsg").textContent=t("exDone");
+    if(!window.claude&&ext){try{var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download="budce-"+today()+"."+ext;document.body.appendChild(a);a.click();a.remove()}catch(e){}}
+  }
+  function importData(){
+    var raw=$("dbox").value.trim(),n=0,ok=false;
+    try{
+      if(raw.charAt(0)==="{"){
+        var o=JSON.parse(raw),ids={};
+        state.tx.forEach(function(x){ids[x.id]=1});
+        (o.tx||[]).forEach(function(x){
+          if(x&&x.date&&+x.amt>0&&(x.type==="in"||x.type==="out")&&!ids[x.id]){state.tx.push({id:x.id||Date.now()+Math.random(),type:x.type,amt:+x.amt,cat:String(x.cat||"Digər"),date:String(x.date).slice(0,10),note:String(x.note||"")});n++}
+        });
+        Object.keys(o.limits||{}).forEach(function(k){if(+o.limits[k]>0){state.limits[k]=+o.limits[k];ok=true}});
+        (o.goals||[]).forEach(function(g){
+          if(g&&g.name&&+g.target>0&&!state.goals.some(function(h){return String(h.id)===String(g.id)})){state.goals.push({id:g.id||Date.now()+Math.random(),name:String(g.name),target:+g.target,saved:+g.saved||0});n++}
+        });
+      }else{
+        raw.split(/\r?\n/).forEach(function(line){
+          var f=csvSplit(line);
+          if(f.length<4||!/^\d{4}-\d{2}-\d{2}/.test(f[0]))return;
+          var a=parseFloat(f[3]);
+          if(!(a>0)||(f[1]!=="in"&&f[1]!=="out"))return;
+          state.tx.push({id:Date.now()+Math.random(),type:f[1],amt:a,cat:f[2]||"Digər",date:f[0].slice(0,10),note:f[4]||""});n++;
+        });
+      }
+    }catch(e){$("dmsg").textContent=t("impErr");return}
+    if(!n&&!ok){$("dmsg").textContent=t("impErr");return}
+    save();render();$("dmsg").textContent=t("impOk")+n;
+  }
+
+  function hashPw(pw,salt){
+    var data=salt+"|"+pw;
+    if(window.crypto&&crypto.subtle&&window.TextEncoder){
+      return crypto.subtle.digest("SHA-256",new TextEncoder().encode(data)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return("0"+x.toString(16)).slice(-2)}).join("")});
+    }
+    var h=5381;for(var i=0;i<data.length;i++)h=((h*33)^data.charCodeAt(i))>>>0;
+    return Promise.resolve("f"+h.toString(16));
+  }
+  function syncLock(){$("lockSet").hidden=!!lock;$("lockUnset").hidden=!lock}
+  function setWrapInert(v){document.querySelector(".wrap").inert=v;var r=$("cbRoot");if(r)r.inert=v}
+  function showLock(){$("lock").hidden=false;setWrapInert(true);$("pwU").value="";$("uErr").textContent="";$("pwU").focus()}
+  function afterUnlock(){if(!splashed){splashed=true;splash()}}
+  function tryUnlock(){
+    hashPw($("pwU").value,lock.salt).then(function(h){
+      if(h===lock.hash){$("lock").hidden=true;setWrapInert(false);afterUnlock()}
+      else $("uErr").textContent=t("pwWrong");
+    });
+  }
+  function boot(){syncLock();if(lock)showLock();else afterUnlock()}
+
+  function initFeatures(){
+    try{lock=JSON.parse(localStorage.getItem(LK))}catch(e){lock=null}
+    if(!lock||!lock.hash)lock=null;
+    $("fq").oninput=render;$("fT").onchange=render;$("fC").onchange=render;
+    $("cancelEd").onclick=function(){editId=null;$("amt").value="";$("note").value="";syncAdd()};
+    $("gAdd").onclick=function(){
+      var n=$("gName").value.trim(),v=parseFloat($("gTarget").value);
+      if(!n||!(v>0))return;
+      state.goals.push({id:Date.now()+Math.random(),name:n,target:v,saved:0});
+      $("gName").value="";$("gTarget").value="";save();render();
+    };
+    $("exJ").onclick=function(){showData(JSON.stringify({v:1,tx:state.tx,limits:state.limits,goals:state.goals}),"json")};
+    $("exC").onclick=function(){showData("date,type,category,amount,note\n"+state.tx.map(function(x){return[x.date,x.type,x.cat,x.amt,csvq(x.note||"")].join(",")}).join("\n"),"csv")};
+    $("imp").onclick=importData;
+    $("lockOn").onclick=function(){
+      var pw=$("pw1").value;
+      if(pw.length<4){$("lockErr").textContent=t("pwShort");return}
+      var salt=Math.random().toString(36).slice(2);
+      hashPw(pw,salt).then(function(h){
+        lock={salt:salt,hash:h};
+        try{localStorage.setItem(LK,JSON.stringify(lock))}catch(e){}
+        $("pw1").value="";$("lockErr").textContent="";syncLock();
+      });
+    };
+    $("lockOff").onclick=function(){
+      hashPw($("pw2").value,lock.salt).then(function(h){
+        if(h===lock.hash){lock=null;try{localStorage.removeItem(LK)}catch(e){}$("pw2").value="";$("lockErr").textContent="";syncLock()}
+        else $("lockErr").textContent=t("pwWrong");
+      });
+    };
+    $("lockNow").onclick=showLock;
+    $("uBtn").onclick=tryUnlock;
+    $("pwU").onkeydown=function(e){if(e.key==="Enter")tryUnlock()};
+    $("uForgot").onclick=function(){
+      if(this.dataset.sure==="1"){
+        state={tx:[],limits:{},goals:[]};save();lock=null;try{localStorage.removeItem(LK)}catch(e){}
+        $("lock").hidden=true;setWrapInert(false);syncLock();render();afterUnlock();
+        this.dataset.sure="0";this.textContent=t("forgot");
+      }else{this.dataset.sure="1";this.textContent=t("sure")}
+    };
+  }
+
+  function splash(){
+    var sp=$("splash");if(!sp)return;
+    var msg=t("greet"),tb=$("typed"),done=false;
+    var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function close(){if(done)return;done=true;sp.classList.add("hide");setTimeout(function(){sp.remove()},700)}
+    sp.onclick=close;$("skip").onclick=close;
+    if(reduce){tb.textContent=msg;setTimeout(close,1800);return}
+    var i=0;
+    setTimeout(function w(){tb.textContent=msg.slice(0,++i);if(i<msg.length)setTimeout(w,70)},1500);
+    setTimeout(close,4300);
+  }
+
+  window.cbContext=function(){
+    var m=$("month").value||today().slice(0,7),inc=0,exp=0,by={},outs=[];
+    state.tx.forEach(function(x){
+      if(x.date.slice(0,7)!==m)return;
+      if(x.type==="in")inc+=x.amt;else{exp+=x.amt;by[x.cat]=(by[x.cat]||0)+x.amt;outs.push(x)}
+    });
+    var cs=EXP.filter(function(c){return by[c]}).sort(function(a,b){return by[b]-by[a]});
+    outs.sort(function(a,b){return b.amt-a.amt});
+    var text="Month: "+m+"\nCurrency: "+CUR[S.cur]+"\nIncome: "+fmt(inc)+"\nExpenses: "+fmt(exp)+"\nBalance: "+fmt(inc-exp)+
+      "\nExpenses by category: "+(cs.map(function(c){return cn(c)+" "+fmt(by[c])+(state.limits[c]?" (limit "+fmt(state.limits[c])+")":"")}).join("; ")||"none")+
+      "\nLargest expenses: "+(outs.slice(0,5).map(function(x){return x.date+" "+cn(x.cat)+(x.note?" ("+x.note+")":"")+" "+fmt(x.amt)}).join("; ")||"none")+
+      "\nSavings goals: "+(state.goals.map(function(g){return g.name+" "+fmt(g.saved)+" of "+fmt(g.target)}).join("; ")||"none");
+    return{text:text,sum:{i:fmt(inc),e:fmt(exp),b:fmt(inc-exp),t:cs.length?cn(cs[0])+" "+fmt(by[cs[0]]):""},local:{top:cs.length?cn(cs[0]):"",topP:cs.length?Math.round(by[cs[0]]/exp*100):0,goals:state.goals.map(function(g){return{n:g.name,p:Math.round(Math.min(g.saved/g.target,1)*100),l:fmt(Math.max(g.target-g.saved,0))}}),over:EXP.filter(function(c){return state.limits[c]&&(by[c]||0)>=state.limits[c]}).map(cn)}};
+  };
+  applyTheme();initSettings();initFeatures();applyText();render();boot();
+})();
+</script>
+<script>
+/* Chatbot widget logic.
+   Optional hooks:
+   - window.cbAsk = async function(message, history){ return "reply text"; }  -> plug in your own backend
+   - window.cbContext = function(){ return {text:"data for the AI", sum:{i:"",e:"",b:"",t:""}}; } -> budget data for answers
+   Without cbAsk, the widget uses Claude through the published artifact page (window.claude "sample" capability). */
+(function(){
+  var root=document.getElementById("cbRoot");if(!root)return;
+  var C=["tr","az","en","ru","es","de"];
+  var D={
+    title:"Bütçe asistanı|Büdcə köməkçisi|Budget assistant|Помощник по бюджету|Asistente de presupuesto|Budget-Assistent",
+    status:"Çevrimiçi|Onlayn|Online|Онлайн|En línea|Online",
+    ph:"Mesajınızı yazın...|Mesajınızı yazın...|Type your message...|Введите сообщение...|Escribe tu mensaje...|Nachricht schreiben...",
+    send:"Gönder|Göndər|Send|Отправить|Enviar|Senden",
+    open:"Asistanı aç|Köməkçini aç|Open assistant|Открыть помощника|Abrir asistente|Assistent öffnen",
+    close:"Kapat|Bağla|Close|Закрыть|Cerrar|Schließen",
+    hi:"Merhaba! Ben bütçe asistanınızım. Harcamalarınız, limitleriniz ve hedefleriniz hakkında soru sorabilirsiniz.|Salam! Mən büdcə köməkçinizəm. Xərcləriniz, limitləriniz və hədəfləriniz haqqında sual verə bilərsiniz.|Hi! I'm your budget assistant. Ask me about your spending, limits and goals.|Здравствуйте! Я ваш помощник по бюджету. Спрашивайте о расходах, лимитах и целях.|¡Hola! Soy tu asistente de presupuesto. Pregúntame por tus gastos, límites y metas.|Hallo! Ich bin dein Budget-Assistent. Frag mich zu Ausgaben, Limits und Zielen.",
+    c1:"Bu ay ne kadar harcadım?|Bu ay nə qədər xərcləmişəm?|How much did I spend this month?|Сколько я потратил в этом месяце?|¿Cuánto he gastado este mes?|Wie viel habe ich diesen Monat ausgegeben?",
+    c2:"Tasarruf için öneri ver|Qənaət üçün məsləhət ver|Give me saving tips|Дай советы по экономии|Dame consejos para ahorrar|Gib mir Spartipps",
+    c3:"Hedeflerim nasıl gidiyor?|Hədəflərim necədir?|How are my goals going?|Как мои цели?|¿Cómo van mis metas?|Wie laufen meine Ziele?",
+    think:"Yazıyor|Yazır|Typing|Печатает|Escribiendo|Schreibt",
+    err:"Yapay zekâ yanıtı şu an kullanılamıyor. Yine de kısa bir yanıt:|Süni intellekt cavabı hazırda əlçatan deyil. Yenə də qısa cavab:|The AI reply isn't available right now. Here's a quick answer instead:|Ответ ИИ сейчас недоступен. Вот краткий ответ:|La respuesta de la IA no está disponible ahora. Esta es una respuesta rápida:|Die KI-Antwort ist gerade nicht verfügbar. Hier eine Kurzantwort:",
+    errShort:"Yanıt şu an kullanılamıyor, lütfen sonra tekrar deneyin.|Cavab hazırda əlçatan deyil, bir az sonra yenidən cəhd edin.|No reply is available right now. Please try again later.|Ответ сейчас недоступен. Попробуйте позже.|No hay respuesta disponible ahora. Inténtalo más tarde.|Gerade keine Antwort verfügbar. Bitte später erneut versuchen.",
+    sum:"Gelir {i}, gider {e}, bakiye {b}. En yüksek gider: {t}.|Gəlir {i}, xərc {e}, qalıq {b}. Ən böyük xərc: {t}.|Income {i}, expenses {e}, balance {b}. Biggest expense: {t}.|Доходы {i}, расходы {e}, баланс {b}. Больше всего: {t}.|Ingresos {i}, gastos {e}, saldo {b}. Mayor gasto: {t}.|Einnahmen {i}, Ausgaben {e}, Saldo {b}. Größte Ausgabe: {t}.",
+    none:"yok|yoxdur|none|нет|ninguno|keine",
+    note:"Mesajlarınız ve bütçe özetiniz yanıt için Claude'a gönderilir.|Mesajlarınız və büdcə xülasəniz cavab üçün Claude-a göndərilir.|Your messages and budget summary are sent to Claude to answer.|Сообщения и сводка бюджета отправляются Claude для ответа.|Tus mensajes y el resumen de tu presupuesto se envían a Claude para responder.|Deine Nachrichten und die Budgetübersicht werden zur Antwort an Claude gesendet.",
+    lGoal:"{n}: %{p} tamamlandı, {l} kaldı.|{n}: {p}% tamamlanıb, {l} qalıb.|{n}: {p}% done, {l} left.|{n}: выполнено {p}%, осталось {l}.|{n}: {p}% completado, faltan {l}.|{n}: {p}% erreicht, noch {l}.",
+    lGoalNone:"Henüz tasarruf hedefiniz yok. Hedefler bölümünden ekleyebilirsiniz.|Hələ yığım hədəfiniz yoxdur. Hədəflər bölməsindən əlavə edə bilərsiniz.|You have no savings goals yet. You can add one in the goals section.|У вас пока нет целей. Добавьте их в разделе целей.|Aún no tienes metas de ahorro. Puedes añadirlas en la sección de metas.|Du hast noch keine Sparziele. Du kannst sie im Bereich Ziele hinzufügen.",
+    lTip:"En çok {t} kategorisine harcıyorsunuz (giderlerin %{p}'i). Önce burada küçük bir kesinti deneyin ve her kategoriye limit koyun.|Ən çox {t} kateqoriyasına xərcləyirsiniz (xərclərin {p}%-i). Əvvəlcə burada kiçik endirim edin və hər kateqoriyaya limit qoyun.|Most of your spending goes to {t} ({p}% of expenses). Try a small cut there first and set a limit for each category.|Больше всего вы тратите на {t} ({p}% расходов). Сначала попробуйте немного сократить это и задайте лимит для каждой категории.|Gastas más en {t} ({p}% de los gastos). Prueba a recortar un poco ahí y pon un límite a cada categoría.|Am meisten gibst du für {t} aus ({p}% der Ausgaben). Spare dort zuerst ein wenig und setze für jede Kategorie ein Limit.",
+    lTipNone:"Bu ay henüz gider yok. Birkaç gider ekleyin, size özel öneri vereyim.|Bu ay hələ xərc yoxdur. Bir neçə xərc əlavə edin, sizə uyğun məsləhət verim.|No expenses this month yet. Add a few and I can give tailored tips.|В этом месяце расходов нет. Добавьте несколько, и я дам советы.|Aún no hay gastos este mes. Añade algunos y te daré consejos.|Diesen Monat gibt es noch keine Ausgaben. Trag einige ein, dann gebe ich Tipps.",
+    lOver:"Limit aşılan kategoriler: {o}.|Limiti aşılan kateqoriyalar: {o}.|Categories over limit: {o}.|Превышен лимит: {o}.|Categorías sobre el límite: {o}.|Kategorien über dem Limit: {o}.",
+    lHelp:"Şunları sorabilirsiniz: bu ay harcamam, bakiyem, hedeflerim veya tasarruf önerisi.|Bunları soruşa bilərsiniz: bu ay xərcim, qalığım, hədəflərim və ya qənaət məsləhəti.|You can ask about this month's spending, balance, goals, or saving tips.|Спросите о расходах за месяц, балансе, целях или советах по экономии.|Puedes preguntar por los gastos del mes, el saldo, las metas o consejos de ahorro.|Frag nach den Ausgaben des Monats, dem Saldo, den Zielen oder Spartipps."
+  };
+  var $=function(id){return document.getElementById(id)};
+  var qa=function(s){return Array.prototype.slice.call(root.querySelectorAll(s))};
+  function L(){var i=C.indexOf((document.documentElement.lang||"az").slice(0,2));return i<0?1:i}
+  function t(k){return D[k].split("|")[L()]}
+  var panel=$("cbPanel"),msgs=$("cbMsgs"),input=$("cbInput"),sendBtn=$("cbSend"),fab=$("cbToggle"),hist=[],busy=false;
+
+  function labels(){
+    qa("[data-cb]").forEach(function(el){el.textContent=t(el.dataset.cb)});
+    qa("[data-cb-ph]").forEach(function(el){el.placeholder=t(el.dataset.cbPh)});
+    qa("[data-cb-al]").forEach(function(el){el.setAttribute("aria-label",t(el.dataset.cbAl))});
+    fab.setAttribute("aria-label",t(root.classList.contains("open")?"close":"open"));
+    var nt=root.querySelector(".cb-note");if(nt)nt.hidden=!hasAI();
+  }
+  function setOpen(o){
+    root.classList.toggle("open",o);panel.inert=!o;
+    fab.setAttribute("aria-expanded",String(o));labels();
+    if(o){input.focus();scroll()}
+  }
+  function scroll(){msgs.scrollTop=msgs.scrollHeight}
+  function addMsg(role,text){
+    var d=document.createElement("div");d.className="cb-m cb-"+role;d.textContent=text;
+    msgs.appendChild(d);scroll();return d;
+  }
+  function setBusy(b){busy=b;sendBtn.disabled=b;root.setAttribute("aria-busy",String(b))}
+
+  function hasAI(){return !!(window.claude&&window.claude.use)}
+  function sumText(c){return t("sum").replace("{i}",c.sum.i).replace("{e}",c.sum.e).replace("{b}",c.sum.b).replace("{t}",c.sum.t||t("none"))}
+  function localAnswer(q){
+    var c=window.cbContext?window.cbContext():null;
+    if(!c||!c.sum)return t("lHelp");
+    var l=c.local||{},s=String(q).toLowerCase();
+    function over(){return l.over&&l.over.length?"\n"+t("lOver").replace("{o}",l.over.join(", ")):""}
+    if(/h[əe]d[əe]f|цел|meta|ziel|goal/.test(s)){
+      return l.goals&&l.goals.length?l.goals.map(function(g){return t("lGoal").replace("{n}",g.n).replace("{p}",g.p).replace("{l}",g.l)}).join("\n"):t("lGoalNone");
+    }
+    if(/qənaət|məsləhət|öneri|tasarruf|совет|эконом|consejo|ahorr|spar|tip|sav/.test(s)){
+      return(l.top?t("lTip").replace("{t}",l.top).replace("{p}",l.topP):t("lTipNone"))+over();
+    }
+    if(/qalıq|bakiye|баланс|saldo|balance|xərc|harca|gider|расход|потрат|gast|ausgab|ausgeg|spen|expens|gəlir|gelir|доход|ingres|einnahm|income/.test(s)){
+      return sumText(c)+over();
+    }
+    return t("lHelp");
+  }
+  function fallback(q){var a=localAnswer(q);return hasAI()?t("err")+" "+a:a}
+  function claudeAsk(q,h,onPart){
+    if(!window.claude||!window.claude.use)return Promise.resolve(null);
+    return window.claude.use("sample").then(function(sample){
+      if(!sample)return null;
+      var ctx=window.cbContext?window.cbContext():null;
+      var lang=["Turkish","Azerbaijani","English","Russian","Spanish","German"][L()];
+      var prompt="You are a friendly assistant inside a personal budget tracker website. Reply in the same language as the user's last message (if unclear, use "+lang+"). Be concise: at most 4 short sentences, plain text, no markdown. Use only the budget data below for any figures and never invent numbers; if the data does not answer the question, say so and suggest what to add. For saving tips, be practical and specific to the categories shown.\n\nBUDGET DATA:\n"+(ctx?ctx.text:"(none)")+"\n\nCONVERSATION:\n"+h.map(function(m){return(m.role==="user"?"User: ":"Assistant: ")+m.content}).join("\n")+"\nAssistant:";
+      return sample(prompt,{cache:false,modelTier:"quick",onText:function(o){onPart(o.text)}}).then(function(r){return(r.text||"").trim()||null});
+    });
+  }
+  function submit(text){
+    text=(text||"").trim();if(!text||busy)return;
+    $("cbChips").hidden=true;
+    addMsg("user",text);hist.push({role:"user",content:text});hist=hist.slice(-8);
+    input.value="";setBusy(true);
+    var b=addMsg("bot","");b.classList.add("typing");b.setAttribute("aria-label",t("think"));b.innerHTML="<i></i><i></i><i></i>";
+    var ask=window.cbAsk||claudeAsk;
+    function part(s){if(b.classList.contains("typing")){b.classList.remove("typing");b.removeAttribute("aria-label")}b.textContent=s;scroll()}
+    Promise.resolve().then(function(){return ask(text,hist.slice(),part)}).then(function(ans){
+      if(!ans)throw new Error("empty");
+      b.classList.remove("typing");b.textContent=ans;hist.push({role:"assistant",content:ans});
+    }).catch(function(){
+      return new Promise(function(r){setTimeout(function(){b.classList.remove("typing");b.textContent=fallback(text);r()},hasAI()?0:600)});
+    }).then(function(){setBusy(false);scroll();input.focus()});
+  }
+
+  fab.onclick=function(){setOpen(!root.classList.contains("open"))};
+  $("cbClose").onclick=function(){setOpen(false);fab.focus()};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&root.classList.contains("open"))setOpen(false)});
+  $("cbForm").onsubmit=function(e){e.preventDefault();submit(input.value)};
+  qa("[data-q]").forEach(function(b){b.onclick=function(){submit(t(b.dataset.q))}});
+  new MutationObserver(labels).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
+  panel.inert=true;labels();
+})();
+</script>
+<script>if("serviceWorker"in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script>
+</body>
+</html>
